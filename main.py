@@ -74,14 +74,16 @@ async def on_message(message):
         return
 
     try:
-        # 這裡的關鍵！壓制原訊息的 embed (隱藏縮圖)
-        await message.edit(suppress=True)
+        # 重新發送訊息並 suppress embed
+        new_msg = await message.channel.send(message.content)
+        await new_msg.edit(suppress=True)
+        await message.delete()
     except discord.Forbidden:
-        print("沒有權限執行 suppress，請確認 BOT 擁有 Manage Messages 權限")
+        print("沒有權限執行操作，請確認 BOT 擁有 Manage Messages 權限")
     except discord.HTTPException as e:
-        print(f"suppress embed 失敗：{e}")
+        print(f"操作失敗：{e}")
 
-    # 機器人額外發送轉換後的 vxtwitter 連結
+    # 再另外發送轉換後的 vxtwitter 連結
     for url in matches:
         modified_url = url.replace('x.com', 'vxtwitter.com')
         await message.channel.send(modified_url)
