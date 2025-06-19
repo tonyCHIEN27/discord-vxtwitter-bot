@@ -12,7 +12,7 @@ def home():
     return "Bot is alive!"
 
 def run():
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+    app.run(host='0.0.0.0', port=10000)
 
 def keep_alive():
     t = threading.Thread(target=run)
@@ -73,21 +73,17 @@ async def on_message(message):
     if not matches:
         return
 
-    try:
-        # 重新發送訊息並 suppress embed
-        new_msg = await message.channel.send(message.content)
-        await new_msg.edit(suppress=True)
-        await message.delete()
-    except discord.Forbidden:
-        print("沒有權限執行操作，請確認 BOT 擁有 Manage Messages 權限")
-    except discord.HTTPException as e:
-        print(f"操作失敗：{e}")
+    modified_links = [url.replace('x.com', 'vxtwitter.com') for url in matches]
 
-    # 再另外發送轉換後的 vxtwitter 連結
-    for url in matches:
-        modified_url = url.replace('x.com', 'vxtwitter.com')
-        await message.channel.send(modified_url)
-        await asyncio.sleep(0.5)
+    try:
+        await message.delete()
+        for url in modified_links:
+            await message.channel.send(url)
+            await asyncio.sleep(0.5)
+    except discord.Forbidden:
+        print("沒有刪除權限，請確認 BOT 權限足夠")
+    except discord.HTTPException as e:
+        print(f"刪除訊息時出錯：{e}")
 
 keep_alive()
 client.run(TOKEN)
