@@ -12,7 +12,7 @@ def home():
     return "Bot is alive!"
 
 def run():
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
 
 def keep_alive():
     t = threading.Thread(target=run)
@@ -73,17 +73,19 @@ async def on_message(message):
     if not matches:
         return
 
-    modified_links = [url.replace('x.com', 'vxtwitter.com') for url in matches]
-
     try:
-        await message.delete()
-        for url in modified_links:
-            await message.channel.send(url)
-            await asyncio.sleep(0.5)
+        # 這裡的關鍵！壓制原訊息的 embed (隱藏縮圖)
+        await message.edit(suppress=True)
     except discord.Forbidden:
-        print("沒有刪除權限，請確認 BOT 權限足夠")
+        print("沒有權限執行 suppress，請確認 BOT 擁有 Manage Messages 權限")
     except discord.HTTPException as e:
-        print(f"刪除訊息時出錯：{e}")
+        print(f"suppress embed 失敗：{e}")
+
+    # 機器人額外發送轉換後的 vxtwitter 連結
+    for url in matches:
+        modified_url = url.replace('x.com', 'vxtwitter.com')
+        await message.channel.send(modified_url)
+        await asyncio.sleep(0.5)
 
 keep_alive()
 client.run(TOKEN)
